@@ -16,11 +16,23 @@ type Produk struct {
 	Stok  int    `json:"stok"`
 }
 
+// Kategori represents a category in the system
+type Kategori struct {
+	ID        int    `json:"id"`
+	Nama      string `json:"nama"`
+	Deskripsi string `json:"deskripsi"`
+}
+
 // In-memory storage (sementara, nanti ganti database)
 var produk = []Produk{
 	{ID: 1, Nama: "Indomie Godog", Harga: 3500, Stok: 10},
 	{ID: 2, Nama: "Vit 1000ml", Harga: 3000, Stok: 40},
 	{ID: 3, Nama: "kecap", Harga: 12000, Stok: 20},
+}
+
+var kategori = []Kategori{
+	{ID: 1, Nama: "Makanan", Deskripsi: "Kategori produk makanan"},
+	{ID: 2, Nama: "Minuman", Deskripsi: "Kategori produk minuman"},
 }
 
 func getProdukByID(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +120,78 @@ func deleteProduk(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Produk belum ada", http.StatusNotFound)
 }
 
+// Category Handlers
+func getCategoryByID(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/categories/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
+		return
+	}
+
+	for _, k := range kategori {
+		if k.ID == id {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(k)
+			return
+		}
+	}
+
+	http.Error(w, "Kategori tidak ditemukan", http.StatusNotFound)
+}
+
+func updateCategory(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/categories/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
+		return
+	}
+
+	var updateKategori Kategori
+	err = json.NewDecoder(r.Body).Decode(&updateKategori)
+	if err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	for i := range kategori {
+		if kategori[i].ID == id {
+			updateKategori.ID = id
+			kategori[i] = updateKategori
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(updateKategori)
+			return
+		}
+	}
+
+	http.Error(w, "Kategori tidak ditemukan", http.StatusNotFound)
+}
+
+func deleteCategory(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/categories/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
+		return
+	}
+
+	for i, k := range kategori {
+		if k.ID == id {
+			kategori = append(kategori[:i], kategori[i+1:]...)
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{
+				"message": "sukses delete kategori",
+			})
+			return
+		}
+	}
+
+	http.Error(w, "Kategori tidak ditemukan", http.StatusNotFound)
+}
+
 func main() {
 	// GET localhost:8080/api/produk/{id}
 	// PUT localhost:8080/api/produk/{id}
@@ -144,6 +228,38 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated) // 201
 			json.NewEncoder(w).Encode(produkBaru)
+		}
+	})
+
+	// Category Routes
+	http.HandleFunc("/categories/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			getCategoryByID(w, r)
+		} else if r.Method == "PUT" {
+			updateCategory(w, r)
+		} else if r.Method == "DELETE" {
+			deleteCategory(w, r)
+		}
+	})
+
+	http.HandleFunc("/categories", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(kategori)
+		} else if r.Method == "POST" {
+			var kategoriBaru Kategori
+			err := json.NewDecoder(r.Body).Decode(&kategoriBaru)
+			if err != nil {
+				http.Error(w, "Invalid request", http.StatusBadRequest)
+				return
+			}
+
+			kategoriBaru.ID = len(kategori) + 1
+			kategori = append(kategori, kategoriBaru)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(kategoriBaru)
 		}
 	})
 
