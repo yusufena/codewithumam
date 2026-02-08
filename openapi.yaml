@@ -1,0 +1,553 @@
+openapi: 3.0.3
+info:
+  title: Kasir API
+  description: API untuk aplikasi kasir dengan fitur produk, kategori, transaksi, dan laporan penjualan
+  version: 1.0.0
+  contact:
+    name: CodeWithUmam Bootcamp
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+tags:
+  - name: Products
+    description: Endpoint untuk manajemen produk
+  - name: Categories
+    description: Endpoint untuk manajemen kategori
+  - name: Transactions
+    description: Endpoint untuk transaksi checkout
+  - name: Reports
+    description: Endpoint untuk laporan penjualan
+
+paths:
+  /api/produk:
+    get:
+      tags:
+        - Products
+      summary: Get all products
+      description: Mendapatkan daftar semua produk dengan opsi filter berdasarkan nama
+      parameters:
+        - name: name
+          in: query
+          description: Filter produk berdasarkan nama (case-insensitive)
+          required: false
+          schema:
+            type: string
+          example: indom
+      responses:
+        '200':
+          description: Daftar produk berhasil didapatkan
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '500':
+          description: Internal server error
+          content:
+            text/plain:
+              schema:
+                type: string
+
+    post:
+      tags:
+        - Products
+      summary: Create new product
+      description: Membuat produk baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Produk berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid request body
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/produk/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get product by ID
+      description: Mendapatkan detail produk berdasarkan ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID produk
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Detail produk
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid product ID
+        '404':
+          description: Product not found
+
+    put:
+      tags:
+        - Products
+      summary: Update product
+      description: Update data produk
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID produk
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Produk berhasil diupdate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid request
+        '404':
+          description: Product not found
+
+    delete:
+      tags:
+        - Products
+      summary: Delete product
+      description: Hapus produk berdasarkan ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID produk
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Produk berhasil dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product deleted successfully
+        '400':
+          description: Invalid product ID
+        '500':
+          description: Internal server error
+
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Get all categories
+      description: Mendapatkan daftar semua kategori
+      responses:
+        '200':
+          description: Daftar kategori
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '500':
+          description: Internal server error
+
+    post:
+      tags:
+        - Categories
+      summary: Create new category
+      description: Membuat kategori baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '201':
+          description: Kategori berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Invalid request body
+
+  /categories/{id}:
+    get:
+      tags:
+        - Categories
+      summary: Get category by ID
+      description: Mendapatkan detail kategori berdasarkan ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID kategori
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Detail kategori
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Invalid category ID
+        '404':
+          description: Category not found
+
+    put:
+      tags:
+        - Categories
+      summary: Update category
+      description: Update data kategori
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID kategori
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: Kategori berhasil diupdate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Invalid request
+
+    delete:
+      tags:
+        - Categories
+      summary: Delete category
+      description: Hapus kategori berdasarkan ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID kategori
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Kategori berhasil dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category deleted successfully
+        '400':
+          description: Invalid category ID
+        '500':
+          description: Internal server error
+
+  /api/checkout:
+    post:
+      tags:
+        - Transactions
+      summary: Checkout transaction
+      description: Membuat transaksi baru dengan item-item yang dibeli
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+            examples:
+              example1:
+                summary: Contoh checkout 2 produk
+                value:
+                  items:
+                    - product_id: 1
+                      quantity: 2
+                    - product_id: 2
+                      quantity: 1
+      responses:
+        '200':
+          description: Transaksi berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Invalid request body
+        '500':
+          description: Internal server error (misal produk tidak ditemukan atau stock tidak cukup)
+
+  /api/report/hari-ini:
+    get:
+      tags:
+        - Reports
+      summary: Daily sales report
+      description: Mendapatkan laporan penjualan hari ini (total revenue, jumlah transaksi, produk terlaris)
+      responses:
+        '200':
+          description: Laporan penjualan hari ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesReport'
+        '500':
+          description: Internal server error
+
+  /api/report:
+    get:
+      tags:
+        - Reports
+      summary: Sales report with date range
+      description: Mendapatkan laporan penjualan berdasarkan range tanggal
+      parameters:
+        - name: start_date
+          in: query
+          description: Tanggal mulai (format YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-01-01"
+        - name: end_date
+          in: query
+          description: Tanggal akhir (format YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-02-01"
+      responses:
+        '200':
+          description: Laporan penjualan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesReport'
+        '500':
+          description: Internal server error
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Cek status API
+      responses:
+        '200':
+          description: API running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  message:
+                    type: string
+                    example: API Running
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Indomie Goreng
+        price:
+          type: integer
+          description: Harga dalam Rupiah
+          example: 3500
+        stock:
+          type: integer
+          example: 100
+        category_id:
+          type: integer
+          nullable: true
+          example: 1
+        category_name:
+          type: string
+          description: Nama kategori (dari JOIN)
+          example: Makanan
+
+    ProductInput:
+      type: object
+      required:
+        - name
+        - price
+        - stock
+      properties:
+        name:
+          type: string
+          example: Indomie Goreng
+        price:
+          type: integer
+          description: Harga dalam Rupiah
+          example: 3500
+        stock:
+          type: integer
+          example: 100
+        category_id:
+          type: integer
+          nullable: true
+          example: 1
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Makanan
+        description:
+          type: string
+          example: Aneka makanan ringan dan berat
+
+    CategoryInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: Makanan
+        description:
+          type: string
+          example: Aneka makanan ringan dan berat
+
+    CheckoutItem:
+      type: object
+      required:
+        - product_id
+        - quantity
+      properties:
+        product_id:
+          type: integer
+          example: 1
+        quantity:
+          type: integer
+          example: 2
+
+    CheckoutRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutItem'
+
+    TransactionDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        transaction_id:
+          type: integer
+          example: 1
+        product_id:
+          type: integer
+          example: 1
+        product_name:
+          type: string
+          example: Indomie Goreng
+        quantity:
+          type: integer
+          example: 2
+        subtotal:
+          type: integer
+          description: Subtotal dalam Rupiah
+          example: 7000
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        total_amount:
+          type: integer
+          description: Total harga dalam Rupiah
+          example: 12000
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-02-08T10:23:38Z"
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionDetail'
+
+    BestSelling:
+      type: object
+      properties:
+        nama:
+          type: string
+          example: Indomie Goreng
+        qty_terjual:
+          type: integer
+          example: 12
+
+    SalesReport:
+      type: object
+      properties:
+        total_revenue:
+          type: integer
+          description: Total pendapatan dalam Rupiah
+          example: 45000
+        total_transaksi:
+          type: integer
+          example: 5
+        produk_terlaris:
+          allOf:
+            - $ref: '#/components/schemas/BestSelling'
+          nullable: true
+          description: Produk terlaris (null jika tidak ada transaksi)

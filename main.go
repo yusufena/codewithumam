@@ -52,7 +52,17 @@ func main() {
 	categoryService := services.NewCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
-	// 5. Routes
+	// 5. Dependency Injection - Transaction
+	transactionRepo := repositories.NewTransactionRepository(db)
+	transactionService := services.NewTransactionService(transactionRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+
+	// 6. Dependency Injection - Report
+	reportRepo := repositories.NewReportRepository(db)
+	reportService := services.NewReportService(reportRepo)
+	reportHandler := handlers.NewReportHandler(reportService)
+
+	// 7. Routes
 	// Product Routes
 	http.HandleFunc("/api/produk", productHandler.HandleProducts)
 	http.HandleFunc("/api/produk/", productHandler.HandleProductByID)
@@ -60,6 +70,23 @@ func main() {
 	// Category Routes
 	http.HandleFunc("/categories", categoryHandler.HandleCategories)
 	http.HandleFunc("/categories/", categoryHandler.HandleCategoryByID)
+
+	// Transaction Routes
+	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout) // POST
+
+	// Report Routes
+	http.HandleFunc("/api/report/hari-ini", reportHandler.HandleDailySales) // GET
+	http.HandleFunc("/api/report", reportHandler.HandleSalesReport)         // GET with query params
+
+	// API Documentation
+	http.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/x-yaml")
+		http.ServeFile(w, r, "openapi.yaml")
+	})
+
+	http.HandleFunc("/api-docs", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/swagger-ui.html")
+	})
 
 	// Health Check
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
